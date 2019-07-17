@@ -1,0 +1,26 @@
+{
+  "name": "house_messenger-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ermay12/house_messenger-bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ermay12/house_messenger-bot/issues"
+  },
+  "homepage": "https://github.com/ermay12/house_messenger-bot#readme",
+  "devDependencies": {
+    "express": "^4.17.1"
+  },
+  "dependencies": {
+    "facebook-chat-api": "^1.6.1",
+    "upstart": "0.0.2"
+  }
+}
