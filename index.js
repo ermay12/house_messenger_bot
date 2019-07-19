@@ -3,15 +3,20 @@ const express = require("express");
 const fs = require("fs");
 var subscribers = require("./subscribers.json");
 const app = express();
-
-fs.writeFileSync("./subscribers.json", JSON.stringify(subscribers));
-
+app.use(express.json());
 app.listen(3000, () => console.log("Server running on port 3000"));
 
-function processPost(req, res, api) {
-  let message = JSON.parse(req.body);
-  res.send("Got a POST request");
-  api.sendMessage(message.body, message.threadID);
+function processPost(req, res) {
+  let message = req.body;
+  if (message.type === "config") {
+    res.set({
+      "Content-Type": "application/json"
+    });
+    res.send(JSON.stringify(subscribers));
+  }
+  console.log(message);
+  res.send("success");
+  //api.sendMessage(message.body, message.threadID);
 }
 
 function processMessage(event, api) {
@@ -55,7 +60,10 @@ function processMessage(event, api) {
     }
   }
 }
-
+app.post("/", function(req, res) {
+  processPost(req, res);
+});
+/*
 login({ email: "sake.jrhouse", password: "sakejr" }, (err, api) => {
   if (err) return console.error(err);
   app.get("/", (req, res) => {
@@ -73,3 +81,4 @@ login({ email: "sake.jrhouse", password: "sakejr" }, (err, api) => {
     }
   });
 });
+*/
