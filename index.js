@@ -1,68 +1,117 @@
 const login = require("facebook-chat-api");
 const express = require("express");
+const bodyParser = require("body-parser");
 const fs = require("fs");
+const request = require("request");
 var subscribers = require("./subscribers.json");
 const app = express();
 app.use(express.json());
+// for parsing application/xwww-
+app.use(bodyParser.urlencoded({ extended: true }));
+app.set("view engine", "ejs");
 app.listen(3000, () => console.log("Server running on port 3000"));
 
-function processPost(req, res) {
-  let message = req.body;
-  if (message.type === "config") {
-    res.set({
-      "Content-Type": "application/json"
-    });
-    res.send(JSON.stringify(subscribers));
-  }
-  console.log(message);
-  res.send("success");
-  //api.sendMessage(message.body, message.threadID);
+function sendMessage(message, threadID) {
+  console.log(`sending message to: ${threadID} message: ${message}`);
 }
 
-function processMessage(event, api) {
-  let message = event.body.trim();
+function getThreads() {
+  return [
+    { id: 21, name: "Eric Maynard" },
+    { id: 22, name: "BBC" },
+    { id: 23, name: "Sake Jr." }
+  ];
+}
+
+function processNewSubscriber(req, res) {
+  let subscriber = {
+    name: req.body.name,
+    owner: req.body.owner,
+    threadID: req.body.threadID,
+    trigger: req.body.trigger,
+    address: req.body.address
+  };
+  subscribers = subscribers.filter(s => s.name !== subscriber.name);
+  subscribers.push(subscriber);
+  fs.writeFileSync("./subscribers.json", JSON.stringify(subscribers));
+}
+
+function processSendMessage(req, res) {
+  sendMessage(req.body.message, req.body.threadID);
+  res.send(req.body.message);
+}
+
+function processNewMessage(message) {
+  message = message.trim();
   if (
-    message.startsWith("@Sake Jr House") ||
+    message.startsWith("@Sake") ||
     message.startsWith("@Sake Jr") ||
     message.startsWith("@Sake Jr House")
   ) {
     message = message.replace(/^(@Sake Jr House|@Sake Jr|@Sake)/i, "").trim();
-    if (message.startsWith("hook")) {
-      message = message.replace(/^(hook)/i, "").trim();
-      let name = message.slice(0, message.indexOf(" "));
-      message = message.slice(message.indexOf(" ") + 1).trim();
-      let triggers = JSON.parse(message.slice(0, message.indexOf("]") + 1));
-      let address = message.slice(message.indexOf("]") + 1).trim();
-      let subscriber = {
-        name: name,
-        owner: event.senderID,
-        threadID: event.threadID,
-        triggers: triggers,
-        address: address
-      };
-      subscribers = subscribers.filter(s => s.name !== subscriber.name);
-      subscribers.push(subscriber);
-      fs.writeFileSync("./subscribers.json", JSON.stringify(subscribers));
-
-      api.sendMessage("`" + event.threadID + "`", event.threadID);
-      return;
-    }
-    if (message.startsWith("config")) {
-      console.log("config request");
-      api.sendMessage(
-        "`" +
-          JSON.stringify(
-            subscribers.filter(s => s.threadID === event.threadID)
-          ),
-        event.threadID + "`"
-      );
-      return;
-    }
+    subscribers.forEach(subscriber => {
+      if (message.startsWith(subscriber.trigger)) {
+        console.log("about to send a message");
+        request(
+          {
+            method: "POST",
+            uri: subscriber.address,
+            form: {
+              message: "this is my message",
+              threadID: 1234567
+            }
+          },
+          function(error, response, body) {
+            if (error) {
+              return console.error("get failed:", error);
+            }
+            console.log("Upload successful!  Server responded with:", body);
+          }
+        );
+      }
+    });
   }
 }
-app.post("/", function(req, res) {
-  processPost(req, res);
+
+function deleteSubscriber(req, res) {
+  let deleteSubscriber = req.body.name;
+  subscribers = subscribers.filter(s => s.name !== deleteSubscriber);
+  fs.writeFileSync("./subscribers.json", JSON.stringify(subscribers));
+}
+
+app.get("/", function(req, res) {
+  res.render("index", {
+    threads: getThreads(),
+    subscribers: subscribers
+  });
 });
+app.post("/subscribe", function(req, res) {
+  processNewSubscriber(req, res);
+  res.redirect("/");
+});
+app.post("/delete", function(req, res) {
+  deleteSubscriber(req, res);
+  res.redirect("/");
+});
+app.post("/message", processSendMessage);
+
+const readline = require("readline").createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+function getMessages() {
+  readline.question(`Send your message:`, message => {
+    console.log(`recieved ${message}`);
+    processNewMessage(message);
+    readline.close();
+    getMessages();
+  });
+}
+
+setTimeout(function() {
+  getMessages();
+}, 1000);
+
 /*
 login({ email: "sake.jrhouse", password: "sakejr" }, (err, api) => {
   if (err) return console.error(err);

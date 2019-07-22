@@ -1,1 +1,9 @@
-[{"name":"tellHook","owner":"100000337513515","threadID":"2357025514412164","triggers":["tell"],"address":"new_ip_address"}]
+[
+  {
+    "name": "tellHook",
+    "owner": "Eric",
+    "threadID": "2357025514412164",
+    "trigger": "tell",
+    "address": "http://localhost:3000/message"
+  }
+]

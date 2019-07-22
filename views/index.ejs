@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <h1>Sake Jr. House Bot</h1>
+    <h2>Subscribe to Sake</h2>
+    <form action="/subscribe" method="post">
+      Name of Bot Feature:<br />
+      <input type="text" name="name" />
+      <br />
+      Author's Name:<br />
+      <input type="text" name="owner" />
+      <br />
+      Conversation to Subscribe to:<br />
+      <select name="threadID">
+        <% threads.forEach((thread) => { %>
+        <option value="<%=thread.id %>"><%=thread.name %></option>
+        <%})%>
+      </select>
+      <br />
+      Trigger Word:<br />
+      <input type="text" name="trigger" />
+      <br />
+      Subscriber Address:<br />
+      <input type="text" name="address" />
+      <br />
+      <br />
+      <input type="submit" value="Submit" />
+    </form>
+
+    <h2>Subscriptions</h2>
+    <% subscribers.forEach((subscriber) => { %>
+    <form action="/delete" method="post">
+      <input type="hidden" name="name" value="<%=subscriber.name %>" />
+      <input type="submit" value="X" />
+    </form>
+    <p>"<%=JSON.stringify(subscriber) %></p>
+    <br />
+    <%})%>
+  </body>
+</html>
