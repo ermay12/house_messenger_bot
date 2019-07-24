@@ -1,3 +1,4 @@
+const PASSWORD = "scoobisdead";
 const login = require("facebook-chat-api");
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -42,10 +43,14 @@ function processNewSubscriber(req, res) {
 }
 
 function processSendMessage(req, res) {
-  setTimeout(() => {
-    sendMessage(req.body.message, req.body.threadID);
-  }, getRandomInt(5000, 10000));
-  res.send(req.body.message);
+  if (req.body.password == PASSWORD) {
+    setTimeout(() => {
+      sendMessage(req.body.message, req.body.threadID);
+    }, getRandomInt(5000, 10000));
+    res.send("success! Message sent");
+  } else {
+    res.send("Failure, Invalid password.");
+  }
 }
 
 function processNewMessage(message, threadID) {
@@ -69,7 +74,8 @@ function processNewMessage(message, threadID) {
           headers: { "x-api-key": subscriber.apiKey },
           form: {
             message: message,
-            threadID: subscriber.threadID
+            threadID: subscriber.threadID,
+            password: PASSWORD
           }
         },
         function(error, response, body) {
