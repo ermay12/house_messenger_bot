@@ -23,6 +23,9 @@
       Subscriber Address:<br />
       <input type="text" name="address" />
       <br />
+      AWS API Key (optional):<br />
+      <input type="text" name="apiKey" />
+      <br />
       <br />
       <input type="submit" value="Submit" />
     </form>
@@ -31,10 +34,25 @@
     <% subscribers.forEach((subscriber) => { %>
     <form action="/delete" method="post">
       <input type="hidden" name="name" value="<%=subscriber.name %>" />
+      <%=threads.find((thread)=>thread.id===subscriber.threadID ).name %>
       <input type="submit" value="X" />
     </form>
     <p>"<%=JSON.stringify(subscriber) %></p>
     <br />
     <%})%>
   </body>
+
+  <h2>Send a message directly to Sake</h2>
+  <form action="/message" method="post" target="_blank">
+    Message:<br />
+    <input type="text" name="message" />
+    <br />
+    Conversation to send to:<br />
+    <select name="threadID">
+      <% threads.forEach((thread) => { %>
+      <option value="<%=thread.id %>"><%=thread.name %></option>
+      <%})%>
+    </select>
+    <input type="submit" value="Submit" />
+  </form>
 </html>

@@ -11,15 +11,19 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 app.listen(3000, () => console.log("Server running on port 3000"));
 
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * Math.floor(max)) + min;
+}
+
 function sendMessage(message, threadID) {
   console.log(`sending message to: ${threadID} message: ${message}`);
 }
 
 function getThreads() {
   return [
-    { id: 21, name: "Eric Maynard" },
-    { id: 22, name: "BBC" },
-    { id: 23, name: "Sake Jr." }
+    { id: "21", name: "Eric Maynard" },
+    { id: "22", name: "BBC" },
+    { id: "23", name: "Sake Jr." }
   ];
 }
 
@@ -29,7 +33,8 @@ function processNewSubscriber(req, res) {
     owner: req.body.owner,
     threadID: req.body.threadID,
     trigger: req.body.trigger,
-    address: req.body.address
+    address: req.body.address,
+    apiKey: req.body.apiKey
   };
   subscribers = subscribers.filter(s => s.name !== subscriber.name);
   subscribers.push(subscriber);
@@ -37,40 +42,46 @@ function processNewSubscriber(req, res) {
 }
 
 function processSendMessage(req, res) {
-  sendMessage(req.body.message, req.body.threadID);
+  setTimeout(() => {
+    sendMessage(req.body.message, req.body.threadID);
+  }, getRandomInt(5000, 10000));
   res.send(req.body.message);
 }
 
-function processNewMessage(message) {
+function processNewMessage(message, threadID) {
   message = message.trim();
-  if (
-    message.startsWith("@Sake") ||
-    message.startsWith("@Sake Jr") ||
-    message.startsWith("@Sake Jr House")
-  ) {
-    message = message.replace(/^(@Sake Jr House|@Sake Jr|@Sake)/i, "").trim();
-    subscribers.forEach(subscriber => {
-      if (message.startsWith(subscriber.trigger)) {
-        console.log("about to send a message");
-        request(
-          {
-            method: "POST",
-            uri: subscriber.address,
-            form: {
-              message: "this is my message",
-              threadID: 1234567
-            }
-          },
-          function(error, response, body) {
-            if (error) {
-              return console.error("get failed:", error);
-            }
-            console.log("Upload successful!  Server responded with:", body);
+  //if (
+  // message.startsWith("@Sake") ||
+  // message.startsWith("@Sake Jr") ||
+  // message.startsWith("@Sake Jr House")
+  //) {
+  //message = message.replace(/^(@Sake Jr House|@Sake Jr|@Sake)/i, "").trim();
+  subscribers.forEach(subscriber => {
+    if (
+      threadID === subscriber.threadID &&
+      message.startsWith(subscriber.trigger)
+    ) {
+      console.log("about to send a message");
+      request(
+        {
+          method: "POST",
+          uri: subscriber.address,
+          headers: { "x-api-key": subscriber.apiKey },
+          form: {
+            message: message,
+            threadID: subscriber.threadID
           }
-        );
-      }
-    });
-  }
+        },
+        function(error, response, body) {
+          if (error) {
+            return console.error("get failed:", error);
+          }
+          console.log("Successfully sent. Server responded with:", body);
+        }
+      );
+    }
+  });
+  //}
 }
 
 function deleteSubscriber(req, res) {
@@ -99,18 +110,18 @@ const readline = require("readline").createInterface({
   input: process.stdin,
   output: process.stdout
 });
+
 function getMessages() {
-  readline.question(`Send your message:`, message => {
-    console.log(`recieved ${message}`);
-    processNewMessage(message);
-    readline.close();
-    getMessages();
-  });
+  setTimeout(() => {
+    readline.question(`Send your message:`, message => {
+      console.log(`recieved ${message}`);
+      processNewMessage(message, "22");
+      getMessages();
+    });
+  }, 1000);
 }
 
-setTimeout(function() {
-  getMessages();
-}, 1000);
+getMessages();
 
 /*
 login({ email: "sake.jrhouse", password: "sakejr" }, (err, api) => {
