@@ -1,8 +1,5 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-  </head>
   <body>
     <h1>Sake Jr. House Bot</h1>
     <h2>Subscribe to Sake</h2>
@@ -51,6 +48,12 @@
       Password:<br />
       <input type="password" name="password" />
       <br />
+      delayMillisMin:<br />
+      <input type="number" name="delayMillisMin" />
+      <br />
+      delayMillisMax:<br />
+      <input type="number" name="delayMillisMax" />
+      <br />
       Conversation to send to:<br />
       <select name="threadID">
         <% threads.forEach((thread) => { %>
@@ -59,18 +62,5 @@
       </select>
       <input type="submit" value="Submit" />
     </form>
-
-    <script>
-      //https://blog.teamtreehouse.com/create-ajax-contact-form
-      $(function() {
-        // Get the form.
-        var form = $("#ajax-contact");
-
-        // Get the messages div.
-        var formMessages = $("#form-messages");
-
-        // TODO: The rest of the code will go here...
-      });
-    </script>
   </body>
 </html>

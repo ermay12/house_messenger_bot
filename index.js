@@ -1,10 +1,23 @@
+const {
+  sendMessageToFacebook,
+  getFacebookThreads,
+  getMessagesFromFacebook,
+  logInToFacebook,
+  sendTypingToFacebook
+} = require("./test_facebook_api.js");
+const {
+  processNewSubscriber,
+  getSubscribers,
+  deleteSubscriber
+} = require("./subscribers.js");
+const { processNewSchedule } = require("./schedule.js");
+const { getRandomInt } = require("./utility.js");
 const PASSWORD = "scoobisdead";
-const login = require("facebook-chat-api");
+const FIRSTNAME = "Sake";
+const LASTNAME = "Jr";
 const express = require("express");
 const bodyParser = require("body-parser");
-const fs = require("fs");
 const request = require("request");
-var subscribers = require("./subscribers.json");
 const app = express();
 app.use(express.json());
 // for parsing application/xwww-
@@ -12,139 +25,128 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 app.listen(3000, () => console.log("Server running on port 3000"));
 
-function getRandomInt(min, max) {
-  return Math.floor(Math.random() * Math.floor(max)) + min;
+function sendMessageToSubscriber(subscriber, message) {
+  console.log(`sending post to ${subscriber.address} message: ${message}`);
+  request(
+    {
+      method: "POST",
+      uri: subscriber.address,
+      headers: { "x-api-key": subscriber.apiKey },
+      body: {
+        message: message,
+        threadID: subscriber.threadID
+      },
+      json: true
+    },
+    function(error, response, body) {
+      if (error) {
+        return console.error("get failed:", error);
+      }
+      console.log("Successfully sent. Server responded with:", body);
+    }
+  );
 }
 
-function sendMessage(message, threadID) {
-  console.log(`sending message to: ${threadID} message: ${message}`);
-}
+const CHAR_PER_MINUTE = 200; //average typing speed
+const MILLIS_PER_MINUTE = 60 * 1000;
 
-function getThreads() {
-  return [
-    { id: "21", name: "Eric Maynard" },
-    { id: "22", name: "BBC" },
-    { id: "23", name: "Sake Jr." }
-  ];
-}
+function processSendMessage(req) {
+  const { password, message, threadID } = req.body;
+  let delayMillisMin = parseInt(req.body.delayMillisMin);
+  let delayMillisMax = parseInt(req.body.delayMillisMax);
 
-function processNewSubscriber(req, res) {
-  let subscriber = {
-    name: req.body.name,
-    owner: req.body.owner,
-    threadID: req.body.threadID,
-    trigger: req.body.trigger,
-    address: req.body.address,
-    apiKey: req.body.apiKey
-  };
-  subscribers = subscribers.filter(s => s.name !== subscriber.name);
-  subscribers.push(subscriber);
-  fs.writeFileSync("./subscribers.json", JSON.stringify(subscribers));
-}
-
-function processSendMessage(req, res) {
-  if (req.body.password == PASSWORD) {
+  if (password == PASSWORD) {
+    const typingMillis = (message.length / CHAR_PER_MINUTE) * MILLIS_PER_MINUTE;
+    const delayMillis = Math.max(
+      getRandomInt(delayMillisMin, delayMillisMax) - typingMillis,
+      0
+    );
     setTimeout(() => {
-      sendMessage(req.body.message, req.body.threadID);
-    }, getRandomInt(5000, 10000));
-    res.send("success! Message sent");
+      sendTypingToFacebook(threadID);
+      setTimeout(() => {
+        sendMessageToFacebook(message, threadID);
+      }, typingMillis);
+    }, delayMillis);
+    return `Message send initiated.  Delay = ${delayMillis} Typing delay = ${typingMillis}`;
   } else {
-    res.send("Failure, Invalid password.");
+    return "Failure, Invalid password.";
   }
 }
 
 function processNewMessage(message, threadID) {
   message = message.trim();
-  //if (
-  // message.startsWith("@Sake") ||
-  // message.startsWith("@Sake Jr") ||
-  // message.startsWith("@Sake Jr House")
-  //) {
-  //message = message.replace(/^(@Sake Jr House|@Sake Jr|@Sake)/i, "").trim();
-  subscribers.forEach(subscriber => {
-    if (
-      threadID === subscriber.threadID &&
-      message.startsWith(subscriber.trigger)
-    ) {
-      console.log("about to send a message");
-      request(
-        {
-          method: "POST",
-          uri: subscriber.address,
-          headers: { "x-api-key": subscriber.apiKey },
-          form: {
-            message: message,
-            threadID: subscriber.threadID,
-            password: PASSWORD
-          }
-        },
-        function(error, response, body) {
-          if (error) {
-            return console.error("get failed:", error);
-          }
-          console.log("Successfully sent. Server responded with:", body);
-        }
-      );
-    }
-  });
-  //}
-}
-
-function deleteSubscriber(req, res) {
-  let deleteSubscriber = req.body.name;
-  subscribers = subscribers.filter(s => s.name !== deleteSubscriber);
-  fs.writeFileSync("./subscribers.json", JSON.stringify(subscribers));
+  //check if the message starts with the bot's name (case insensitive)
+  if (
+    new RegExp(`^(@${FIRSTNAME + " " + LASTNAME}|@${FIRSTNAME})`, "i").test(
+      message
+    )
+  ) {
+    //remove the bots name from the string and trim whitespace from ends
+    message = message
+      .replace(
+        new RegExp(`^(@${FIRSTNAME + " " + LASTNAME}|@${FIRSTNAME})`, "i"),
+        ""
+      )
+      .trim();
+    getSubscribers().forEach(subscriber => {
+      //check that the message is in the right thread and that the message begins with the trigger word (case insensitive)
+      if (
+        threadID === subscriber.threadID &&
+        new RegExp(`^(${subscriber.trigger})`, "i").test(message)
+      ) {
+        sendMessageToSubscriber(subscriber, message);
+      }
+    });
+  }
 }
 
 app.get("/", function(req, res) {
-  res.render("index", {
-    threads: getThreads(),
-    subscribers: subscribers
-  });
+  try {
+    res.render("index", {
+      threads: getFacebookThreads(),
+      subscribers: getSubscribers()
+    });
+  } catch (error) {
+    res.send("Failure: " + error);
+  }
 });
 app.post("/subscribe", function(req, res) {
-  processNewSubscriber(req, res);
-  res.redirect("/");
+  try {
+    processNewSubscriber(req);
+    res.redirect("/");
+  } catch (error) {
+    res.send("Failure");
+  }
 });
 app.post("/delete", function(req, res) {
-  deleteSubscriber(req, res);
-  res.redirect("/");
+  try {
+    deleteSubscriber(req);
+    res.redirect("/");
+  } catch (error) {
+    res.send("Failure: " + error);
+  }
 });
-app.post("/message", processSendMessage);
-
-const readline = require("readline").createInterface({
-  input: process.stdin,
-  output: process.stdout
+app.post("/message", (req, res) => {
+  try {
+    res.send(processSendMessage(req));
+  } catch (error) {
+    res.send("Failure: " + error);
+  }
 });
 
-function getMessages() {
-  setTimeout(() => {
-    readline.question(`Send your message:`, message => {
-      console.log(`recieved ${message}`);
-      processNewMessage(message, "22");
-      getMessages();
-    });
-  }, 1000);
-}
-
-getMessages();
-
-/*
-login({ email: "sake.jrhouse", password: "sakejr" }, (err, api) => {
-  if (err) return console.error(err);
-  app.get("/", (req, res) => {
-    res.send("HEY!");
-  });
-  app.post("/", function(req, res) {
-    processPost(req, res, api);
-  });
-  api.listen((err, event) => {
-    if (err) console.log(err);
-    console.log("recieved event");
-    if (event.type === "message") {
-      console.log("new message");
-      processMessage(event, api);
-    }
-  });
+app.post("/schedule", (req, res) => {
+  try {
+    res.send(processNewSchedule(req));
+  } catch (error) {
+    res.send("Failure: " + error);
+  }
 });
-*/
+
+logInToFacebook({}, (err, api) => {
+  if (err) {
+    console.log("Failed to log into facebook.");
+    return;
+  }
+  console.log("Successfully logged in to facebook.");
+  getMessagesFromFacebook(processNewMessage);
+});
