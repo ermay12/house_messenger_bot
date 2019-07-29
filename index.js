@@ -10,7 +10,11 @@ const {
   getSubscribers,
   deleteSubscriber
 } = require("./subscribers.js");
-const { processNewSchedule } = require("./schedule.js");
+const {
+  processNewSchedule,
+  getScheduledEvents,
+  deleteScheduledEvent
+} = require("./schedule.js");
 const { getRandomInt } = require("./utility.js");
 const PASSWORD = "scoobisdead";
 const FIRSTNAME = "Sake";
@@ -51,26 +55,22 @@ const CHAR_PER_MINUTE = 200; //average typing speed
 const MILLIS_PER_MINUTE = 60 * 1000;
 
 function processSendMessage(req) {
-  const { password, message, threadID } = req.body;
+  const { message, threadID } = req.body;
   let delayMillisMin = parseInt(req.body.delayMillisMin);
   let delayMillisMax = parseInt(req.body.delayMillisMax);
 
-  if (password == PASSWORD) {
-    const typingMillis = (message.length / CHAR_PER_MINUTE) * MILLIS_PER_MINUTE;
-    const delayMillis = Math.max(
-      getRandomInt(delayMillisMin, delayMillisMax) - typingMillis,
-      0
-    );
+  const typingMillis = (message.length / CHAR_PER_MINUTE) * MILLIS_PER_MINUTE;
+  const delayMillis = Math.max(
+    getRandomInt(delayMillisMin, delayMillisMax) - typingMillis,
+    0
+  );
+  setTimeout(() => {
+    sendTypingToFacebook(threadID);
     setTimeout(() => {
-      sendTypingToFacebook(threadID);
-      setTimeout(() => {
-        sendMessageToFacebook(message, threadID);
-      }, typingMillis);
-    }, delayMillis);
-    return `Message send initiated.  Delay = ${delayMillis} Typing delay = ${typingMillis}`;
-  } else {
-    return "Failure, Invalid password.";
-  }
+      sendMessageToFacebook(message, threadID);
+    }, typingMillis);
+  }, delayMillis);
+  return `Message send initiated.  Delay = ${delayMillis} Typing delay = ${typingMillis}`;
 }
 
 function processNewMessage(message, threadID) {
@@ -100,17 +100,29 @@ function processNewMessage(message, threadID) {
   }
 }
 
+function authenticate(req, res) {
+  if (req.body.password !== PASSWORD) {
+    res.send("Invalid Password!");
+    return false;
+  }
+  return true;
+}
+
 app.get("/", function(req, res) {
   try {
     res.render("index", {
       threads: getFacebookThreads(),
-      subscribers: getSubscribers()
+      subscribers: getSubscribers(),
+      scheduledEvents: getScheduledEvents()
     });
   } catch (error) {
     res.send("Failure: " + error);
   }
 });
 app.post("/subscribe", function(req, res) {
+  if (authenticate(req, res) == false) {
+    return;
+  }
   try {
     processNewSubscriber(req);
     res.redirect("/");
@@ -127,6 +139,9 @@ app.post("/delete", function(req, res) {
   }
 });
 app.post("/message", (req, res) => {
+  if (authenticate(req, res) == false) {
+    return;
+  }
   try {
     res.send(processSendMessage(req));
   } catch (error) {
@@ -135,8 +150,19 @@ app.post("/message", (req, res) => {
 });
 
 app.post("/schedule", (req, res) => {
+  if (authenticate(req, res) == false) {
+    return;
+  }
   try {
     res.send(processNewSchedule(req));
+  } catch (error) {
+    res.send("Failure: " + error);
+  }
+});
+app.post("/deleteschedule", function(req, res) {
+  try {
+    deleteScheduledEvent(req);
+    res.redirect("/");
   } catch (error) {
     res.send("Failure: " + error);
   }

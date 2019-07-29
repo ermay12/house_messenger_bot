@@ -30,16 +30,6 @@
       <input type="submit" value="Submit" />
     </form>
 
-    <h2>Subscriptions</h2>
-    <% subscribers.forEach((subscriber) => { %>
-    <form action="/delete" method="post">
-      <input type="hidden" name="name" value="<%=subscriber.name %>" />
-      <%=threads.find((thread)=>thread.id===subscriber.threadID ).name %>
-      <input type="submit" value="X" />
-    </form>
-    <p>"<%=JSON.stringify(subscriber) %></p>
-    <br />
-    <%})%>
     <h2>Send a message directly to Sake</h2>
     <form action="/message" method="post" target="_blank">
       Message:<br />
@@ -62,5 +52,57 @@
       </select>
       <input type="submit" value="Submit" />
     </form>
+
+    <h2>Schedule an event</h2>
+    <form action="/schedule" method="post" target="_blank">
+      Name:<br />
+      <input type="text" name="name" />
+      <br />
+      Owner:<br />
+      <input type="text" name="owner" />
+      <br />
+      Address:<br />
+      <input type="text" name="address" />
+      <br />
+      Api Key:<br />
+      <input type="text" name="apiKey" />
+      <br />
+      Cron:<br />
+      <input type="text" name="cron" />
+      <br />
+      Delete:<br />
+      <input type="checkbox" name="delete" value="true" />
+      <br />
+      Data:<br />
+      <input type="text" name="data" />
+      <br />
+      Password:<br />
+      <input type="password" name="password" />
+      <br />
+
+      <input type="submit" value="Submit" />
+    </form>
+
+    <h2>Subscriptions</h2>
+    <% subscribers.forEach((subscriber) => { %>
+    <form action="/delete" method="post">
+      <input type="hidden" name="name" value="<%=subscriber.name %>" />
+      <%=threads.find((thread)=>thread.id===subscriber.threadID ).name %>
+      <input type="submit" value="X" />
+    </form>
+    <p>"<%=JSON.stringify(subscriber) %></p>
+    <br />
+    <%})%>
+
+    <h2>Scheduled Events</h2>
+    <% scheduledEvents.forEach((scheduledEvent) => { %>
+    <form action="/deleteschedule" method="post">
+      <input type="hidden" name="name" value="<%=scheduledEvent.name %>" />
+      <%=scheduledEvent.name %>
+      <input type="submit" value="X" />
+    </form>
+    <p>"<%=JSON.stringify(scheduledEvent) %></p>
+    <br />
+    <%})%>
   </body>
 </html>
