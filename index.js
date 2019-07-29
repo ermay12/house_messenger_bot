@@ -131,6 +131,9 @@ app.post("/subscribe", function(req, res) {
   }
 });
 app.post("/delete", function(req, res) {
+  if (authenticate(req, res) == false) {
+    return;
+  }
   try {
     deleteSubscriber(req);
     res.redirect("/");
@@ -160,6 +163,9 @@ app.post("/schedule", (req, res) => {
   }
 });
 app.post("/deleteschedule", function(req, res) {
+  if (authenticate(req, res) == false) {
+    return;
+  }
   try {
     deleteScheduledEvent(req);
     res.redirect("/");

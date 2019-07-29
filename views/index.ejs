@@ -87,8 +87,10 @@
     <% subscribers.forEach((subscriber) => { %>
     <form action="/delete" method="post">
       <input type="hidden" name="name" value="<%=subscriber.name %>" />
+      Password:
+      <input type="password" name="password" />
+      <input type="submit" value="Delete" />
       <%=threads.find((thread)=>thread.id===subscriber.threadID ).name %>
-      <input type="submit" value="X" />
     </form>
     <p>"<%=JSON.stringify(subscriber) %></p>
     <br />
@@ -98,8 +100,10 @@
     <% scheduledEvents.forEach((scheduledEvent) => { %>
     <form action="/deleteschedule" method="post">
       <input type="hidden" name="name" value="<%=scheduledEvent.name %>" />
+      Password:
+      <input type="password" name="password" />
+      <input type="submit" value="Delete" />
       <%=scheduledEvent.name %>
-      <input type="submit" value="X" />
     </form>
     <p>"<%=JSON.stringify(scheduledEvent) %></p>
     <br />
