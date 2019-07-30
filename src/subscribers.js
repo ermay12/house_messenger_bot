@@ -13,7 +13,10 @@ exports.processNewSubscriber = function(req) {
   };
   subscribers = subscribers.filter(s => s.name !== subscriber.name);
   subscribers.push(subscriber);
-  fs.writeFileSync("./subscribers.json", JSON.stringify(subscribers));
+  fs.writeFileSync(
+    "./persisted_data/subscribers.json",
+    JSON.stringify(subscribers)
+  );
 };
 
 exports.getSubscribers = function() {
@@ -23,5 +26,8 @@ exports.getSubscribers = function() {
 exports.deleteSubscriber = function(req) {
   let deleteSubscriber = req.body.name;
   subscribers = subscribers.filter(s => s.name !== deleteSubscriber);
-  fs.writeFileSync("./subscribers.json", JSON.stringify(subscribers));
+  fs.writeFileSync(
+    "./persisted_data/subscribers.json",
+    JSON.stringify(subscribers)
+  );
 };

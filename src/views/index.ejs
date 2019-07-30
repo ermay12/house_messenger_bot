@@ -98,7 +98,11 @@
       <input type="submit" value="Delete" />
       <%=threads.find((thread)=>thread.id===subscriber.threadID ).name %>
     </form>
-    <p>"<%=JSON.stringify(subscriber) %></p>
+    <p>
+      <%=JSON.stringify({name: subscriber.name, owner: subscriber.owner,
+      threadID: subscriber.threadID, trigger: subscriber.trigger, subscribeAll:
+      subscriber.subscribeAll, address: subscriber.address }) %>
+    </p>
     <br />
     <%})%>
 
@@ -111,7 +115,12 @@
       <input type="submit" value="Delete" />
       <%=scheduledEvent.name %>
     </form>
-    <p>"<%=JSON.stringify(scheduledEvent) %></p>
+    <p>
+      "<%=JSON.stringify({ name: scheduledEvent.name, owner:
+      scheduledEvent.owner, address: scheduledEvent.address, cron:
+      scheduledEvent.cron, data: scheduledEvent.data, delete:
+      scheduledEvent.delete }) %>
+    </p>
     <br />
     <%})%>
   </body>

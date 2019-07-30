@@ -1,3 +1,4 @@
+const login = require("facebook-chat-api");
 const readline = require("readline").createInterface({
   input: process.stdin,
   output: process.stdout

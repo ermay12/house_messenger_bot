@@ -29,7 +29,10 @@ exports.processNewSchedule = function(req) {
   };
   scheduledEvents = scheduledEvents.filter(s => s.name !== scheduledEvent.name);
   scheduledEvents.push(scheduledEvent);
-  fs.writeFileSync("./schedule.json", JSON.stringify(scheduledEvents));
+  fs.writeFileSync(
+    "./persisted_data/schedule.json",
+    JSON.stringify(scheduledEvents)
+  );
   scheduleEvent(scheduledEvent);
   return "Scheduled!";
 };
@@ -39,7 +42,10 @@ function deleteScheduledEvent(scheduledEventName) {
     s => s.name === scheduledEventName
   );
   scheduledEvents = scheduledEvents.filter(s => s.name !== scheduledEventName);
-  fs.writeFileSync("./schedule.json", JSON.stringify(scheduledEvents));
+  fs.writeFileSync(
+    "./persisted_data/schedule.json",
+    JSON.stringify(scheduledEvents)
+  );
   if (eventsToDelete.length > 0) {
     scheduledJobs[eventsToDelete[0].name].stop();
     delete scheduledJobs[eventsToDelete[0].name];
