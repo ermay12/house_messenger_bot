@@ -5,13 +5,13 @@ const readline = require("readline").createInterface({
 
 const request = require("request");
 
-function sendMessage(message, threadID) {
+function sendMessage(message, threadID, person) {
   console.log(`Sending ${message} to ${threadID}`);
   request(
     {
       method: "POST",
       uri: "http://localhost:3001/",
-      body: { message, threadID },
+      body: { message, threadID, person },
       json: true
     },
     function(error, response, body) {
@@ -27,8 +27,10 @@ function getMessages() {
   setTimeout(() => {
     readline.question(`What is your message:`, message => {
       readline.question(`Enter thread id:`, threadID => {
-        sendMessage(message, threadID);
-        getMessages();
+        readline.question(`Enter person:`, person => {
+          sendMessage(message, threadID, person);
+          getMessages();
+        });
       });
     });
   }, 1000);

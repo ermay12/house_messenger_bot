@@ -1,1 +1,0 @@
-[{"name":"tellHook","owner":"Eric","threadID":"22","trigger":"tell","address":" https://fryaymart6.execute-api.us-west-2.amazonaws.com/default/tellConversation","apiKey":"9TfIGNFR6p4yWKpLYcOfD6LqY0zZnyEVaes7FHSv"},{"name":"hiHook","owner":"Eric","threadID":"23","trigger":"hi","address":" http://localhost:3002/","apiKey":"9TfIGNFR6p4yWKpLYcOfD6LqY0zZnyEVaes7FHSv"}]

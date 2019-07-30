@@ -1,10 +1,13 @@
+const config = require("../config.json");
 const {
   sendMessageToFacebook,
   getFacebookThreads,
   getMessagesFromFacebook,
   logInToFacebook,
   sendTypingToFacebook
-} = require("./test_facebook_api.js");
+} = config.test
+  ? require("./test/test_facebook_api.js")
+  : require("./facebook_api.js");
 const {
   processNewSubscriber,
   getSubscribers,
@@ -16,9 +19,9 @@ const {
   deleteScheduledEvent
 } = require("./schedule.js");
 const { getRandomInt } = require("./utility.js");
-const PASSWORD = "scoobisdead";
-const FIRSTNAME = "Sake";
-const LASTNAME = "Jr";
+const PASSWORD = config.password;
+const FIRSTNAME = config.firstName;
+const LASTNAME = config.lastName;
 const express = require("express");
 const bodyParser = require("body-parser");
 const request = require("request");
@@ -27,9 +30,11 @@ app.use(express.json());
 // for parsing application/xwww-
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
-app.listen(3000, () => console.log("Server running on port 3000"));
+app.listen(config.port, () =>
+  console.log(`Server running on port ${config.port}`)
+);
 
-function sendMessageToSubscriber(subscriber, message) {
+function sendMessageToSubscriber(subscriber, message, person) {
   console.log(`sending post to ${subscriber.address} message: ${message}`);
   request(
     {
@@ -37,8 +42,9 @@ function sendMessageToSubscriber(subscriber, message) {
       uri: subscriber.address,
       headers: { "x-api-key": subscriber.apiKey },
       body: {
-        message: message,
-        threadID: subscriber.threadID
+        message,
+        threadID: subscriber.threadID,
+        person
       },
       json: true
     },
@@ -73,7 +79,14 @@ function processSendMessage(req) {
   return `Message send initiated.  Delay = ${delayMillis} Typing delay = ${typingMillis}`;
 }
 
-function processNewMessage(message, threadID) {
+function processNewMessage(message, threadID, person) {
+  //send message to subscribers that listen to everything
+  getSubscribers().forEach(subscriber => {
+    if (threadID === subscriber.threadID && subscriber.subscribeAll) {
+      sendMessageToSubscriber(subscriber, message, person);
+    }
+  });
+
   message = message.trim();
   //check if the message starts with the bot's name (case insensitive)
   if (
@@ -92,9 +105,10 @@ function processNewMessage(message, threadID) {
       //check that the message is in the right thread and that the message begins with the trigger word (case insensitive)
       if (
         threadID === subscriber.threadID &&
-        new RegExp(`^(${subscriber.trigger})`, "i").test(message)
+        new RegExp(`^(${subscriber.trigger})`, "i").test(message) &&
+        !subscriber.subscribeAll
       ) {
-        sendMessageToSubscriber(subscriber, message);
+        sendMessageToSubscriber(subscriber, message, person);
       }
     });
   }
@@ -174,7 +188,7 @@ app.post("/deleteschedule", function(req, res) {
   }
 });
 
-logInToFacebook({}, (err, api) => {
+logInToFacebook({ email: "sake.jrhouse", password: "sakejr" }, err => {
   if (err) {
     console.log("Failed to log into facebook.");
     return;

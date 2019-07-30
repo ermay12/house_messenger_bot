@@ -1,5 +1,5 @@
 const fs = require("fs");
-var subscribers = require("./subscribers.json");
+var subscribers = require("./persisted_data/subscribers.json");
 
 exports.processNewSubscriber = function(req) {
   let subscriber = {
@@ -7,6 +7,7 @@ exports.processNewSubscriber = function(req) {
     owner: req.body.owner,
     threadID: req.body.threadID,
     trigger: req.body.trigger,
+    subscribeAll: req.body.subscribeAll,
     address: req.body.address,
     apiKey: req.body.apiKey
   };

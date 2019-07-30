@@ -28,7 +28,7 @@ app.listen(3001, () =>
 exports.getMessagesFromFacebook = function(callback) {
   app.post("/", function(req, res) {
     try {
-      callback(req.body.message, req.body.threadID);
+      callback(req.body.message, req.body.threadID, req.body.person);
       res.send("Success!");
     } catch (error) {
       res.send("Failure!");

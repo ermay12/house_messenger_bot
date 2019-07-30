@@ -1,6 +1,6 @@
 const fs = require("fs");
 const CronJob = require("cron").CronJob;
-var scheduledEvents = require("./schedule.json");
+var scheduledEvents = require("./persisted_data/schedule.json");
 var scheduledJobs = {};
 var _ = require("lodash");
 

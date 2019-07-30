@@ -85,6 +85,7 @@ app.post("/", function(req, res) {
     console.log("New Message!");
     console.log(`Message: ${req.body.message}`);
     console.log(`threadID: ${req.body.threadID}`);
+    console.log(`person: ${req.body.person}`);
     respondWithHi(req.body.threadID);
     scheduleMyself(req.body.threadID);
     res.send("Success!");
