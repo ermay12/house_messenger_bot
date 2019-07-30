@@ -11,7 +11,7 @@ exports.sendTypingToFacebook = function(threadID) {
   fbAPI.sendTypingIndicator(threadID);
 };
 exports.getFacebookThreads = function() {
-  fbAPI.getThreadList(20, null, [], (err, list) => {
+  fbAPI.getThreadList(2, null, ["INBOX"], (err, list) => {
     if (err) return console.error(err);
     cachedThreadList = list.map(thread => ({
       id: thread.threadID,
