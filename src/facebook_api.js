@@ -1,61 +1,46 @@
 const login = require("facebook-chat-api");
-const readline = require("readline").createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
+var fbAPI = null;
+var cachedThreadList = [];
 
 exports.sendMessageToFacebook = function(message, threadID) {
   console.log(`sending message to: ${threadID} message: ${message}`);
+  fbAPI.sendMessage({ body: message }, threadID);
 };
 exports.sendTypingToFacebook = function(threadID) {
   console.log(`sending typing to: ${threadID}`);
+  fbAPI.sendTypingIndicator(threadID);
 };
 exports.getFacebookThreads = function() {
-  return [
-    { id: "21", name: "Eric Maynard" },
-    { id: "22", name: "BBC" },
-    { id: "23", name: "Sake Jr." }
-  ];
+  fbAPI.getThreadList(20, null, [], (err, list) => {
+    if (err) return console.error(err);
+    cachedThreadList = list.map(thread => ({
+      id: thread.threadID,
+      name: thread.name
+    }));
+  });
+  return cachedThreadList;
 };
 
-const express = require("express");
-const app = express();
-app.use(express.json());
-app.listen(3001, () =>
-  console.log("Test message receiver server running on port 3001")
-);
-
+function getSender(senderID, callback) {
+  fbAPI.getUserInfo(senderID, (err, obj) => {
+    if (err) return console.error(err);
+    callback(obj.name);
+  });
+}
 exports.getMessagesFromFacebook = function(callback) {
-  app.post("/", function(req, res) {
-    try {
-      callback(req.body.message, req.body.threadID, req.body.person);
-      res.send("Success!");
-    } catch (error) {
-      res.send("Failure!");
-    }
+  fbAPI.listen((err, message) => {
+    if (err) return console.error(err);
+    console.log("new message");
+    getSender(message.senderID, senderName => {
+      callback(message.body, message.threadID, senderName);
+    });
   });
 };
-
 exports.logInToFacebook = function(credentials, callback) {
-  callback(null);
+  login(credentials, (err, api) => {
+    if (err) return console.error(err);
+    fbAPI = api;
+    exports.getFacebookThreads();
+    callback(err);
+  });
 };
-
-/*
-login({ email: "sake.jrhouse", password: "sakejr" }, (err, api) => {
-  if (err) return console.error(err);
-  app.get("/", (req, res) => {
-    res.send("HEY!");
-  });
-  app.post("/", function(req, res) {
-    processPost(req, res, api);
-  });
-  api.listen((err, event) => {
-    if (err) console.log(err);
-    console.log("recieved event");
-    if (event.type === "message") {
-      console.log("new message");
-      processMessage(event, api);
-    }
-  });
-});
-*/

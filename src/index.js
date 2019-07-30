@@ -188,11 +188,8 @@ app.post("/deleteschedule", function(req, res) {
   }
 });
 
-logInToFacebook({ email: "sake.jrhouse", password: "sakejr" }, err => {
-  if (err) {
-    console.log("Failed to log into facebook.");
-    return;
-  }
+logInToFacebook({ email: config.fbEmail, password: config.fbPassword }, err => {
+  if (err) return console.error("Failed to log into facebook.");
   console.log("Successfully logged in to facebook.");
   getMessagesFromFacebook(processNewMessage);
 });
