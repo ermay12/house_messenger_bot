@@ -1,6 +1,7 @@
+const fs = require("fs");
 const login = require("facebook-chat-api");
-const threads = require("./persisted_data/threads.json");
-const users = require("./persisted_data/users.json");
+var threads = require("./persisted_data/threads.json");
+var users = require("./persisted_data/users.json");
 var fbAPI = null;
 var cachedThreadList = [];
 
@@ -56,4 +57,40 @@ exports.logInToFacebook = function(credentials, callback) {
     exports.getFacebookThreads();
     callback(err);
   });
+};
+
+exports.createFBThread = function(req) {
+  let thread = {
+    id: req.body.id,
+    name: req.body.name
+  };
+  threads = threads.filter(t => t.id !== thread.id);
+  threads.push(threads);
+  fs.writeFileSync("./persisted_data/threads.json", JSON.stringify(threads));
+};
+
+exports.deleteFBThread = function(req) {
+  let deleteID = req.body.id;
+  threads = threads.filter(t => t.id !== deleteID);
+  fs.writeFileSync("./persisted_data/threads.json", JSON.stringify(threads));
+};
+
+exports.createFBUser = function(req) {
+  let user = {
+    id: req.body.id,
+    name: req.body.name
+  };
+  users = users.filter(u => u.id !== user.id);
+  users.push(user);
+  fs.writeFileSync("./persisted_data/users.json", JSON.stringify(users));
+};
+
+exports.deleteFBUser = function(req) {
+  let deleteID = req.body.id;
+  users = users.filter(u => u.id !== deleteID);
+  fs.writeFileSync("./persisted_data/users.json", JSON.stringify(users));
+};
+
+exports.getFBUsers = function() {
+  return users;
 };

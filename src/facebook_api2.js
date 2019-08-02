@@ -1,51 +1,43 @@
 const fs = require("fs");
-var threads = require("../persisted_data/threads.json");
-var users = require("../persisted_data/users.json");
-const readline = require("readline").createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
+var threads = require("./persisted_data/threads.json");
+var users = require("./persisted_data/users.json");
+const { Client } = require("libfb");
+const client = new Client();
 
 exports.sendMessageToFacebook = function(message, threadID) {
   console.log(`sending message to: ${threadID} message: ${message}`);
+  client.sendMessage(threadID, message);
 };
 exports.sendTypingToFacebook = function(threadID) {
   console.log(`sending typing to: ${threadID}`);
+  client.sendTypingState(threadID, true);
 };
 exports.getFacebookThreads = function() {
   return threads;
-  /*
-  fbAPI.getThreadList(2, null, ["INBOX"], (err, list) => {
-    if (err) return console.error(err);
-    cachedThreadList = list.map(thread => ({
-      id: thread.threadID,
-      name: thread.name
-    }));
-  });
-  return cachedThreadList;
-  */
 };
 
-const express = require("express");
-const app = express();
-app.use(express.json());
-app.listen(3001, () =>
-  console.log("Test message receiver server running on port 3001")
-);
-
+function getSender(senderID, callback) {
+  user = users.find(user => user.senderID === senderID);
+  if (user === undefined) {
+    callback("Unknown");
+    return;
+  }
+  callback(user.name);
+}
 exports.getMessagesFromFacebook = function(callback) {
-  app.post("/", function(req, res) {
-    try {
-      callback(req.body.message, req.body.threadID, req.body.person);
-      res.send("Success!");
-    } catch (error) {
-      res.send("Failure!");
-    }
+  client.on("message", message => {
+    console.log("Got a message!");
+    console.log(message.message);
+    getSender(message.authorId, senderName => {
+      callback(message.message, message.threadId, senderName);
+    });
   });
 };
 
 exports.logInToFacebook = function(credentials, callback) {
-  callback(null);
+  client.login(credentials.email, credentials.password).then(() => {
+    callback(null);
+  });
 };
 
 exports.createFBThread = function(req) {
@@ -54,7 +46,7 @@ exports.createFBThread = function(req) {
     name: req.body.name
   };
   threads = threads.filter(t => t.id !== thread.id);
-  threads.push(thread);
+  threads.push(threads);
   fs.writeFileSync("./persisted_data/threads.json", JSON.stringify(threads));
 };
 

@@ -4,10 +4,15 @@ const {
   getFacebookThreads,
   getMessagesFromFacebook,
   logInToFacebook,
-  sendTypingToFacebook
+  sendTypingToFacebook,
+  createFBThread,
+  deleteFBThread,
+  createFBUser,
+  deleteFBUser,
+  getFBUsers
 } = config.test
   ? require("./test/test_facebook_api.js")
-  : require("./facebook_api.js");
+  : require("./facebook_api2.js");
 const {
   processNewSubscriber,
   getSubscribers,
@@ -127,7 +132,8 @@ app.get("/", function(req, res) {
     res.render("index", {
       threads: getFacebookThreads(),
       subscribers: getSubscribers(),
-      scheduledEvents: getScheduledEvents()
+      scheduledEvents: getScheduledEvents(),
+      users: getFBUsers()
     });
   } catch (error) {
     res.send("Failure: " + error);
@@ -182,6 +188,52 @@ app.post("/deleteschedule", function(req, res) {
   }
   try {
     deleteScheduledEvent(req);
+    res.redirect("/");
+  } catch (error) {
+    res.send("Failure: " + error);
+  }
+});
+
+app.post("/thread", (req, res) => {
+  if (authenticate(req, res) == false) {
+    return;
+  }
+  try {
+    createFBThread(req);
+    res.redirect("/");
+  } catch (error) {
+    res.send("Failure: " + error);
+  }
+});
+app.post("/deletethread", function(req, res) {
+  if (authenticate(req, res) == false) {
+    return;
+  }
+  try {
+    deleteFBThread(req);
+    res.redirect("/");
+  } catch (error) {
+    res.send("Failure: " + error);
+  }
+});
+
+app.post("/user", (req, res) => {
+  if (authenticate(req, res) == false) {
+    return;
+  }
+  try {
+    createFBUser(req);
+    res.redirect("/");
+  } catch (error) {
+    res.send("Failure: " + error);
+  }
+});
+app.post("/deleteuser", function(req, res) {
+  if (authenticate(req, res) == false) {
+    return;
+  }
+  try {
+    deleteFBUser(req);
     res.redirect("/");
   } catch (error) {
     res.send("Failure: " + error);

@@ -123,5 +123,63 @@
     </p>
     <br />
     <%})%>
+
+    <h2>Thread ID's</h2>
+    <h3>Add Thread</h3>
+    <form action="/thread" method="post">
+      Thread Name:<br />
+      <input type="text" name="name" />
+      <br />
+      ThreadID:<br />
+      <input type="text" name="id" />
+      <br />
+      Password:<br />
+      <input type="password" name="password" />
+      <br />
+
+      <input type="submit" value="Submit" />
+    </form>
+    <h3>Known Threads</h3>
+    <% threads.forEach((thread) => { %>
+    <form action="/deletethread" method="post">
+      <input type="hidden" name="id" value="<%=thread.id %>" />
+      Password:
+      <input type="password" name="password" />
+      <input type="submit" value="Delete" />
+    </form>
+    <p>
+      "<%=JSON.stringify(thread) %>
+    </p>
+    <br />
+    <%})%>
+
+    <h2>User ID's</h2>
+    <h3>Add User</h3>
+    <form action="/user" method="post">
+      User Name:<br />
+      <input type="text" name="name" />
+      <br />
+      UserID:<br />
+      <input type="text" name="id" />
+      <br />
+      Password:<br />
+      <input type="password" name="password" />
+      <br />
+
+      <input type="submit" value="Submit" />
+    </form>
+    <h3>Known Users</h3>
+    <% users.forEach((user) => { %>
+    <form action="/deleteuser" method="post">
+      <input type="hidden" name="id" value="<%=user.id %>" />
+      Password:
+      <input type="password" name="password" />
+      <input type="submit" value="Delete" />
+    </form>
+    <p>
+      "<%=JSON.stringify(user) %>
+    </p>
+    <br />
+    <%})%>
   </body>
 </html>
